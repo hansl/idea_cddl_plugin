@@ -1,0 +1,164 @@
+// Grammar for CDDL (RFC 8610 Appendix B, as updated by RFC 9682).
+//
+// The ABNF is ambiguous in a few places and is not directly suitable for a PEG parser; notable choices:
+//   - Types are parsed with Grammar-Kit's expression (Pratt) support: "/" binds loosest, then range and
+//     control operators, then primary types.
+//   - A group entry's "type1 =>" member key is parsed as a type followed by an optional "=>", which avoids
+//     re-parsing (possibly large) types when no member key is present.
+//   - A rule's value is parsed as a plain type unless it is followed by something that only makes sense in a
+//     group entry, in which case it is re-parsed as a group entry (this mirrors "typename/groupname" rules).
+//   - "(" type ")" is a special case of "(" group ")", so all parentheses are parsed as a group; whether they
+//     denote a type or a group is decided semantically.
+{
+  parserClass="online.larsen.cddl.parser.CddlParser"
+  parserUtilClass="online.larsen.cddl.parser.CddlParserUtil"
+
+  extends="com.intellij.extapi.psi.ASTWrapperPsiElement"
+
+  psiClassPrefix="Cddl"
+  psiImplClassSuffix="Impl"
+  psiPackage="online.larsen.cddl.psi"
+  psiImplPackage="online.larsen.cddl.psi.impl"
+
+  elementTypeHolderClass="online.larsen.cddl.psi.CddlTypes"
+  elementTypeClass="online.larsen.cddl.psi.CddlElementType"
+  tokenTypeClass="online.larsen.cddl.psi.CddlTokenType"
+
+  tokens=[
+    GCHOICE_ASSIGN='//='
+    TCHOICE_ASSIGN='/='
+    GCHOICE='//'
+    TCHOICE='/'
+    ARROW='=>'
+    ASSIGN='='
+    EXCLUSIVE_RANGE='...'
+    INCLUSIVE_RANGE='..'
+    DOT='.'
+    LPAREN='('
+    RPAREN=')'
+    LBRACE='{'
+    RBRACE='}'
+    LBRACKET='['
+    RBRACKET=']'
+    LT='<'
+    GT='>'
+    COMMA=','
+    COLON=':'
+    CARET='^'
+    QUESTION='?'
+    STAR='*'
+    PLUS='+'
+    TILDE='~'
+    AMPERSAND='&'
+    HASH='#'
+
+    COMMENT='comment'
+    DIRECTIVE='directive'
+    ID='identifier'
+    NUMBER='number'
+    TEXT_STRING='text string'
+    BYTE_STRING='byte string'
+    CTLOP='control operator'
+    TAG_HEAD='tag'
+    MAJOR_TYPE_HEAD='major type'
+  ]
+
+  extends(".*_type")=type
+}
+
+cddl_file ::= rule_item*
+
+private rule_item ::= !<<eof>> rule {pin=1 recoverWhile=rule_recover}
+private rule_recover ::= !rule_start
+// Used by error recovery only: a name followed by an assignment at the start of a line begins a new rule.
+private rule_start ::= <<atLineStart>> ID generic_params? assign_op
+
+rule ::= ID generic_params? assign_op rule_value {
+  pin=3
+  mixin="online.larsen.cddl.psi.impl.CddlRuleMixin"
+  implements="online.larsen.cddl.psi.CddlNamedElement"
+}
+private assign_op ::= '=' | '/=' | '//='
+private rule_value ::= type !('=>' | ':' | '^' | '*') | group_entry {name="type or group entry"}
+
+generic_params ::= '<' generic_param (',' generic_param)* '>' {pin=1}
+generic_param ::= ID {
+  mixin="online.larsen.cddl.psi.impl.CddlGenericParamMixin"
+  implements="online.larsen.cddl.psi.CddlNamedElement"
+}
+generic_args ::= '<' type (',' type)* '>' {pin=1}
+// Checking for '<' with an external predicate keeps it out of the "expected" list of error messages.
+private optional_generic_args ::= (<<atGenericArgs>> generic_args)?
+
+// ---------------------------------------------------------------------------------------------------------------------
+// Types
+
+type ::= choice_type
+  | range_or_control_type_group
+  | primary_type_group {name="type"}
+
+private range_or_control_type_group ::= range_type | control_type
+private primary_type_group ::= literal_type
+  | ref_type
+  | paren_type
+  | map_type
+  | array_type
+  | unwrap_type
+  | enum_type
+  | tag_type
+  | major_type
+  | any_type
+
+choice_type ::= type ('/' type)+
+range_type ::= type ('..' | '...') type
+control_type ::= type CTLOP type
+
+literal_type ::= NUMBER | TEXT_STRING | BYTE_STRING {
+  mixin="online.larsen.cddl.psi.impl.CddlLiteralTypeMixin"
+}
+// Do not mistake the start of the next rule for a reference (e.g. after a rule whose value is missing).
+ref_type ::= !rule_start name_ref optional_generic_args
+paren_type ::= '(' group ')' {pin=1}
+map_type ::= '{' group '}' {pin=1}
+array_type ::= '[' group ']' {pin=1}
+unwrap_type ::= '~' name_ref optional_generic_args {pin=1}
+enum_type ::= '&' ('(' group ')' | name_ref optional_generic_args) {pin=1}
+tag_type ::= TAG_HEAD head_number? '(' type ')'
+major_type ::= (TAG_HEAD | MAJOR_TYPE_HEAD) head_number?
+any_type ::= '#'
+private head_number ::= '.' '<' type '>' {pin=1}
+
+name_ref ::= ID {
+  mixin="online.larsen.cddl.psi.impl.CddlNameRefMixin"
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+// Groups
+
+group ::= group_choice ('//' group_choice)*
+group_choice ::= group_choice_item*
+private group_choice_item ::= !group_choice_end group_entry ','? {pin=1}
+private group_choice_end ::= rule_start | '}' | ']' | ')' | '//' | <<eof>>
+
+group_entry ::= occurrence? group_entry_body {recoverWhile=group_entry_recover}
+private group_entry_recover ::= !(group_choice_end | ',' | group_entry_start)
+private group_entry_start ::= ID | NUMBER | TEXT_STRING | BYTE_STRING | TAG_HEAD | MAJOR_TYPE_HEAD
+  | '(' | '{' | '[' | '~' | '&' | '#' | '?' | '*' | '+'
+
+private group_entry_body ::= bareword_entry
+  | value_entry
+  | type_entry {name="group entry"}
+private bareword_entry ::= bareword_member_key type {pin=1}
+private value_entry ::= value_member_key type {pin=1}
+private type_entry ::= type type_entry_tail?
+private type_entry_tail ::= type_member_key type {pin=1}
+
+bareword_member_key ::= ID ':' {implements="online.larsen.cddl.psi.CddlMemberKey"}
+value_member_key ::= (NUMBER | TEXT_STRING | BYTE_STRING) ':' {implements="online.larsen.cddl.psi.CddlMemberKey"}
+left type_member_key ::= '^'? '=>' {implements="online.larsen.cddl.psi.CddlMemberKey"}
+
+occurrence ::= NUMBER? '*' occurrence_upper_bound? | '+' | '?'
+// "* 3 => x" means "zero or more 3 => x", not "zero to three x".
+private occurrence_upper_bound ::= NUMBER !occurrence_upper_bound_follow
+private occurrence_upper_bound_follow ::= ',' | '}' | ']' | ')' | '//' | '=>' | '^' | ':' | '/' | '..' | '...'
+  | CTLOP | <<eof>>

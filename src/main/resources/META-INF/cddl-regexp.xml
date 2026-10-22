@@ -1,0 +1,7 @@
+<idea-plugin>
+    <extensions defaultExtensionNs="com.intellij">
+        <multiHostInjector implementation="online.larsen.cddl.injection.CddlRegexpInjector"/>
+        <regExpCapabilitiesProvider language="CDDL"
+                                    implementationClass="online.larsen.cddl.injection.CddlRegExpCapabilitiesProvider"/>
+    </extensions>
+</idea-plugin>

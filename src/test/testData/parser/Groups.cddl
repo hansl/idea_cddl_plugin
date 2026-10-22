@@ -1,0 +1,26 @@
+entries = {
+  ? optional: int,
+  * tstr => any,
+  + repeated: uint
+  1*3 bounded: tstr
+  0* "zero-or-more" => bool,
+  *3 upto: int,
+  2* atleast: int,
+  1 => "integer key",
+  "text": "text key",
+  'bytes': 'byte key',
+  key ^ => int,
+  * 3 => int,
+  ~header,
+  &(a: 1),
+  (inner: int, other: tstr),
+  (a: int // b: tstr),
+}
+array = [int, tstr, * bool]
+empty-map = {}
+empty-array = []
+group-rule = (a: int, b: int)
+group-entry-rule = ? x: int
+occurs-rule = 1*2 int
+key-rule = a: int
+choice-groups = [a: int // b: tstr, c: bool // ]

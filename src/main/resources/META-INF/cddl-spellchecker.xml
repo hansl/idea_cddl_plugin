@@ -1,0 +1,6 @@
+<idea-plugin>
+    <extensions defaultExtensionNs="com.intellij">
+        <spellchecker.support language="CDDL"
+                              implementationClass="online.larsen.cddl.spellchecker.CddlSpellcheckingStrategy"/>
+    </extensions>
+</idea-plugin>

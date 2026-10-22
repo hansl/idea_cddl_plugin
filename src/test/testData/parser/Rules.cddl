@@ -1,0 +1,24 @@
+; Examples from RFC 8610
+person = {
+  age: int,
+  name: tstr,
+  employer: tstr,
+}
+
+attire = "bow tie" / "necktie" / "Internet attire"
+attireBlock = (
+  "bow tie" => bool,
+  "necktie" => bool,
+)
+
+address = { delivery }
+delivery = (
+  street: tstr, ? number: uint, city //
+  po-box: uint, city //
+  per-pickup: true )
+city = (
+  name: tstr, zip-code: uint
+)
+
+attire /= "swimwear"
+delivery //= (lat: float, long: float, drone-type: tstr)

@@ -1,0 +1,9 @@
+missing-value =
+next = int
+unclosed = { a: int, b:
+after = tstr
+garbage = int ] ) =>
+fine = uint
+bad-entry = { a: int = 3, b: tstr }
+recovered = [ : , int ]
+last = any

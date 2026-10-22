@@ -1,0 +1,88 @@
+; The CDDL standard prelude (RFC 8610, Appendix D).
+; It is automatically available in every CDDL specification.
+
+; Any data item.
+any = #
+
+; Unsigned integer (major type 0).
+uint = #0
+; Negative integer (major type 1).
+nint = #1
+; Integer: unsigned or negative.
+int = uint / nint
+
+; Byte string (major type 2).
+bstr = #2
+; Byte string (alias for bstr).
+bytes = bstr
+; Text string (major type 3).
+tstr = #3
+; Text string (alias for tstr).
+text = tstr
+
+; Standard date/time string (RFC 3339), tag 0.
+tdate = #6.0(tstr)
+; Epoch-based date/time, tag 1.
+time = #6.1(number)
+; Integer or floating-point number.
+number = int / float
+; Unsigned bignum, tag 2.
+biguint = #6.2(bstr)
+; Negative bignum, tag 3.
+bignint = #6.3(bstr)
+; Bignum: unsigned or negative.
+bigint = biguint / bignint
+; Integer of any size.
+integer = int / bigint
+; Unsigned integer of any size.
+unsigned = uint / biguint
+; Decimal fraction, tag 4.
+decfrac = #6.4([e10: int, m: integer])
+; Bigfloat, tag 5.
+bigfloat = #6.5([e2: int, m: integer])
+; Expected conversion to base64url encoding, tag 21.
+eb64url = #6.21(any)
+; Expected conversion to base64 encoding, tag 22.
+eb64legacy = #6.22(any)
+; Expected conversion to base16 encoding, tag 23.
+eb16 = #6.23(any)
+; Embedded CBOR data item, tag 24.
+encoded-cbor = #6.24(bstr)
+; URI (RFC 3986), tag 32.
+uri = #6.32(tstr)
+; base64url-encoded text, tag 33.
+b64url = #6.33(tstr)
+; base64-encoded text, tag 34.
+b64legacy = #6.34(tstr)
+; Regular expression, tag 35.
+regexp = #6.35(tstr)
+; MIME message, tag 36.
+mime-message = #6.36(tstr)
+; Self-described CBOR, tag 55799.
+cbor-any = #6.55799(any)
+
+; Half-precision (16-bit) floating-point number.
+float16 = #7.25
+; Single-precision (32-bit) floating-point number.
+float32 = #7.26
+; Double-precision (64-bit) floating-point number.
+float64 = #7.27
+; Half- or single-precision floating-point number.
+float16-32 = float16 / float32
+; Single- or double-precision floating-point number.
+float32-64 = float32 / float64
+; Floating-point number of any precision.
+float = float16-32 / float64
+
+; The simple value false.
+false = #7.20
+; The simple value true.
+true = #7.21
+; Boolean: false or true.
+bool = false / true
+; The simple value null.
+nil = #7.22
+; The simple value null (alias for nil).
+null = nil
+; The simple value undefined.
+undefined = #7.23

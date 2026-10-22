@@ -1,0 +1,23 @@
+choice = int / tstr / null
+range = 0..10
+exclusive = 0...10
+named-range = min .. max
+neg = -1 .. -0x10
+floats = 1.5 / -2.5e10 / 0x1.8p3 / 1e5
+binary = 0b1010
+ctl = tstr .size 3
+ctl2 = bstr .size (1..64)
+re = tstr .regexp "[a-z]+\\d"
+bits = uint .bits flags
+bytes = h'0102 03' / b64'AQID' / 'raw\'s'
+paren = (int / tstr) .size 4
+unwrapped = ~header
+enum-group = &colors
+enum-inline = &(red: 0, green: 1)
+tag = #6.32(tstr)
+tag-any = #6(any)
+tag-computed = #6.<1..10>(bstr)
+major = #0 / #1.24 / #7.25 / #7.<20..21> / #
+generic<K, V> = { * K => V }
+use = generic<tstr, uint>
+nested = [* [* { ? a: int }]]

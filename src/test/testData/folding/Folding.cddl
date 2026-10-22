@@ -1,0 +1,15 @@
+<fold text='; First line ...'>; First line
+; Second line</fold>
+person = <fold text='{...}'>{
+  name: tstr,
+  tags: <fold text='[...]'>[
+    * tstr
+  ]</fold>
+}</fold>
+
+; A single comment line is not folded
+inline = {a: int}
+delivery = <fold text='(...)'>(
+  street: tstr //
+  po-box: uint
+)</fold>

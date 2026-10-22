@@ -1,0 +1,7 @@
+;# import rfc9052 as cose
+;# include label, values from rfc9052
+; A regular comment
+start = cose.COSE_Key ; trailing comment
+; another
+
+other = int

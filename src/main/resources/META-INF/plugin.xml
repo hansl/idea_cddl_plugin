@@ -1,0 +1,120 @@
+<!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
+<idea-plugin>
+    <id>online.larsen.cddl</id>
+    <name>CDDL</name>
+    <vendor email="hans@larsen.online">Hans Larsen</vendor>
+
+    <description><![CDATA[
+    <p>Language support for <a href="https://www.rfc-editor.org/rfc/rfc8610">CDDL</a> (Concise Data Definition
+    Language), the schema language for CBOR and JSON data (RFC 8610, updated by RFC 9682).</p>
+    <ul>
+      <li>Syntax and semantic highlighting, with configurable colors</li>
+      <li>Completion of rule names, generic parameters, prelude types and control operators</li>
+      <li>Go to declaration, find usages, rename, and Go to Symbol</li>
+      <li>The standard prelude (<code>tstr</code>, <code>uint</code>, ...) with navigation and documentation</li>
+      <li>Module directives (<code>;# import</code> and <code>;# include</code>)</li>
+      <li>Inspections: unresolved references, unused rules, duplicate definitions, unknown control operators,
+          generic argument counts, invalid escapes; with quick fixes</li>
+      <li>Quick documentation for rules, control operators, tags and major types</li>
+      <li>Formatter, structure view, folding, breadcrumbs, brace matching and commenting</li>
+      <li>Regular expression support inside <code>.regexp</code> strings</li>
+    </ul>
+    ]]></description>
+
+    <depends>com.intellij.modules.platform</depends>
+    <depends optional="true" config-file="cddl-regexp.xml">com.intellij.modules.regexp</depends>
+    <depends optional="true" config-file="cddl-spellchecker.xml">com.intellij.modules.spellchecker</depends>
+
+    <resource-bundle>messages.CddlBundle</resource-bundle>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <!-- Language -->
+        <fileType name="CDDL"
+                  implementationClass="online.larsen.cddl.CddlFileType"
+                  fieldName="INSTANCE"
+                  language="CDDL"
+                  extensions="cddl"/>
+        <lang.parserDefinition language="CDDL"
+                               implementationClass="online.larsen.cddl.parser.CddlParserDefinition"/>
+        <lang.elementManipulator forClass="online.larsen.cddl.psi.impl.CddlLiteralTypeMixin"
+                                 implementationClass="online.larsen.cddl.psi.impl.CddlLiteralManipulator"/>
+        <fileBasedIndex implementation="online.larsen.cddl.resolve.CddlRuleNameIndex"/>
+        <psi.referenceContributor language="CDDL"
+                                  implementation="online.larsen.cddl.resolve.CddlModuleReferenceContributor"/>
+
+        <!-- Highlighting -->
+        <lang.syntaxHighlighterFactory language="CDDL"
+                                       implementationClass="online.larsen.cddl.highlighting.CddlSyntaxHighlighterFactory"/>
+        <annotator language="CDDL" implementationClass="online.larsen.cddl.highlighting.CddlAnnotator"/>
+        <colorSettingsPage implementation="online.larsen.cddl.highlighting.CddlColorSettingsPage"/>
+
+        <!-- Editor -->
+        <lang.braceMatcher language="CDDL" implementationClass="online.larsen.cddl.editor.CddlBraceMatcher"/>
+        <lang.commenter language="CDDL" implementationClass="online.larsen.cddl.editor.CddlCommenter"/>
+        <lang.quoteHandler language="CDDL" implementationClass="online.larsen.cddl.editor.CddlQuoteHandler"/>
+        <lang.foldingBuilder language="CDDL" implementationClass="online.larsen.cddl.editor.CddlFoldingBuilder"/>
+        <lang.formatter language="CDDL"
+                        implementationClass="online.larsen.cddl.formatting.CddlFormattingModelBuilder"/>
+        <langCodeStyleSettingsProvider
+                implementation="online.larsen.cddl.formatting.CddlLanguageCodeStyleSettingsProvider"/>
+        <breadcrumbsInfoProvider implementation="online.larsen.cddl.navigation.CddlBreadcrumbsProvider"/>
+
+        <!-- Completion -->
+        <completion.contributor language="CDDL"
+                                implementationClass="online.larsen.cddl.completion.CddlCompletionContributor"/>
+        <typedHandler implementation="online.larsen.cddl.completion.CddlTypedHandler"/>
+
+        <!-- Navigation and refactoring -->
+        <lang.findUsagesProvider language="CDDL"
+                                 implementationClass="online.larsen.cddl.refactoring.CddlFindUsagesProvider"/>
+        <lang.namesValidator language="CDDL" implementationClass="online.larsen.cddl.refactoring.CddlNamesValidator"/>
+        <lang.refactoringSupport language="CDDL"
+                                 implementationClass="online.larsen.cddl.refactoring.CddlRefactoringSupportProvider"/>
+        <renamePsiElementProcessor implementation="online.larsen.cddl.refactoring.CddlRenameRuleProcessor"/>
+        <vetoRenameCondition implementation="online.larsen.cddl.refactoring.CddlPreludeVetoRenameCondition"/>
+        <lang.psiStructureViewFactory language="CDDL"
+                                      implementationClass="online.larsen.cddl.structure.CddlStructureViewFactory"/>
+        <gotoSymbolContributor implementation="online.larsen.cddl.navigation.CddlGotoSymbolContributor"/>
+        <codeInsight.lineMarkerProvider language="CDDL"
+                                        implementationClass="online.larsen.cddl.navigation.CddlLineMarkerProvider"/>
+        <lang.documentationProvider language="CDDL"
+                                    implementationClass="online.larsen.cddl.documentation.CddlDocumentationProvider"/>
+
+        <!-- Inspections -->
+        <localInspection language="CDDL" shortName="CddlUnresolvedReference"
+                         bundle="messages.CddlBundle" key="inspection.unresolved.reference.display.name"
+                         groupBundle="messages.CddlBundle" groupKey="inspection.group"
+                         enabledByDefault="true" level="ERROR"
+                         implementationClass="online.larsen.cddl.inspections.CddlUnresolvedReferenceInspection"/>
+        <localInspection language="CDDL" shortName="CddlUnusedRule"
+                         bundle="messages.CddlBundle" key="inspection.unused.rule.display.name"
+                         groupBundle="messages.CddlBundle" groupKey="inspection.group"
+                         enabledByDefault="true" level="WARNING"
+                         implementationClass="online.larsen.cddl.inspections.CddlUnusedRuleInspection"/>
+        <localInspection language="CDDL" shortName="CddlDuplicateRule"
+                         bundle="messages.CddlBundle" key="inspection.duplicate.rule.display.name"
+                         groupBundle="messages.CddlBundle" groupKey="inspection.group"
+                         enabledByDefault="true" level="ERROR"
+                         implementationClass="online.larsen.cddl.inspections.CddlDuplicateRuleInspection"/>
+        <localInspection language="CDDL" shortName="CddlUnknownControlOperator"
+                         bundle="messages.CddlBundle" key="inspection.unknown.control.operator.display.name"
+                         groupBundle="messages.CddlBundle" groupKey="inspection.group"
+                         enabledByDefault="true" level="WARNING"
+                         implementationClass="online.larsen.cddl.inspections.CddlUnknownControlOperatorInspection"/>
+        <localInspection language="CDDL" shortName="CddlGenericArguments"
+                         bundle="messages.CddlBundle" key="inspection.generic.arguments.display.name"
+                         groupBundle="messages.CddlBundle" groupKey="inspection.group"
+                         enabledByDefault="true" level="ERROR"
+                         implementationClass="online.larsen.cddl.inspections.CddlGenericArgumentsInspection"/>
+
+        <!-- New file -->
+        <internalFileTemplate name="CDDL File"/>
+    </extensions>
+
+    <actions>
+        <action id="Cddl.NewFile" class="online.larsen.cddl.CddlCreateFileAction"
+                text="CDDL File" description="Create a new CDDL file" icon="/icons/cddl.svg">
+            <add-to-group group-id="NewGroup" anchor="before" relative-to-action="NewFromTemplate"/>
+        </action>
+    </actions>
+</idea-plugin>
