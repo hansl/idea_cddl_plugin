@@ -12,6 +12,7 @@ import com.intellij.navigation.ItemPresentation
 import com.intellij.openapi.editor.Editor
 import com.intellij.psi.NavigatablePsiElement
 import com.intellij.psi.PsiFile
+import com.intellij.util.PsiNavigateUtil
 import online.larsen.cddl.CddlIcons
 import online.larsen.cddl.psi.CddlArrayType
 import online.larsen.cddl.psi.CddlAssignment
@@ -63,7 +64,8 @@ class CddlStructureViewElement(private val element: NavigatablePsiElement) :
 
     override fun getValue(): Any = element
 
-    override fun navigate(requestFocus: Boolean) = element.navigate(requestFocus)
+    // Navigatable.navigate is override-only: plugins must not call it directly.
+    override fun navigate(requestFocus: Boolean) = PsiNavigateUtil.navigate(element, requestFocus)
 
     override fun canNavigate(): Boolean = element.canNavigate()
 

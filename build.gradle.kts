@@ -45,8 +45,8 @@ intellijPlatform {
 
     pluginVerification {
         ides {
-            // Verifies against the targeted IDE; use recommended() to check all compatible releases (large downloads).
-            current()
+            // All compatible releases, including EAPs, as JetBrains Marketplace does (each is a large download).
+            recommended()
         }
     }
 }

@@ -22,7 +22,14 @@
     ]]></description>
 
     <change-notes><![CDATA[
-    <p>Initial version.</p>
+    <p><b>0.1.1</b></p>
+    <ul>
+      <li>Fixed use of deprecated and override-only platform APIs.</li>
+    </ul>
+    <p><b>0.1.0</b></p>
+    <ul>
+      <li>Initial version.</li>
+    </ul>
     ]]></change-notes>
 
     <depends>com.intellij.modules.platform</depends>
