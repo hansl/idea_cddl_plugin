@@ -2,7 +2,7 @@
 <idea-plugin>
     <id>online.larsen.cddl</id>
     <name>CDDL</name>
-    <vendor email="hans@larsen.online">Hans Larsen</vendor>
+    <vendor email="hans@larsen.online" url="https://github.com/hansl/idea_cddl_plugin">Hans Larsen</vendor>
 
     <description><![CDATA[
     <p>Language support for <a href="https://www.rfc-editor.org/rfc/rfc8610">CDDL</a> (Concise Data Definition
@@ -20,6 +20,10 @@
       <li>Regular expression support inside <code>.regexp</code> strings</li>
     </ul>
     ]]></description>
+
+    <change-notes><![CDATA[
+    <p>Initial version.</p>
+    ]]></change-notes>
 
     <depends>com.intellij.modules.platform</depends>
     <depends optional="true" config-file="cddl-regexp.xml">com.intellij.modules.regexp</depends>

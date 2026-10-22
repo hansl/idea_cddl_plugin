@@ -4,3 +4,11 @@
 .intellijPlatform
 .kotlin
 build
+
+# Plugin signing material (see README)
+*.pem
+*.crt
+*.key
+
+# Local Makefile settings, e.g. SIGNING_DIR
+local.mk

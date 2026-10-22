@@ -58,6 +58,50 @@ The lexer and parser are generated at build time from `src/main/grammar/Cddl.fle
 `src/main/grammar/Cddl.bnf` (Grammar-Kit). The grammar's comments explain where it deviates from the RFC's ABNF to
 suit a PEG parser and error recovery.
 
+### Releasing
+
+The `Makefile` wraps the release steps:
+
+```shell
+make test      # run the tests
+make build     # build build/distributions/idea-cddl-<version>.zip
+make sign      # build, sign and verify build/distributions/idea-cddl-<version>-signed.zip
+make publish   # run the tests, then sign and upload a new version to JetBrains Marketplace
+```
+
+**One-time setup: a signing key.** Create a passphrase-protected private key and a self-signed certificate in a
+directory outside the repository, ideally on an encrypted volume. The certificate is valid for a year; renew it by
+re-running the second command with the same key.
+
+```shell
+openssl genpkey -aes-256-cbc -algorithm RSA -pkeyopt rsa_keygen_bits:4096 -out private_encrypted.pem
+openssl req -new -x509 -days 365 -key private_encrypted.pem -subj "/CN=Hans Larsen" -out chain.crt
+```
+
+Then tell `make` where that directory is, in a `local.mk` file (ignored by git) or on the command line:
+
+```make
+SIGNING_DIR = /Volumes/<encrypted volume>/jetbrains-signing
+```
+
+`make sign` and `make publish` prompt for the key passphrase. `make publish` also needs a Marketplace token
+(*Profile | My Tokens* on JetBrains Marketplace): it reads it from `$SIGNING_DIR/publish-token` if that file exists,
+and prompts for it otherwise. `PRIVATE_KEY_PASSWORD` and `PUBLISH_TOKEN` can also be set in the environment, e.g. in CI.
+
+Gradle stores task inputs, which include the passphrase and the token, in its project cache (`.gradle/`). To keep them
+off the regular disk, `scripts/gradle-with-secrets.sh` gives these builds a temporary project cache inside
+`SIGNING_DIR`, deleted when the build ends. The signing tool receives the passphrase as a command-line argument, so
+avoid running these builds with `--info` or `--debug`, which print it.
+
+**Publishing.** The first version must be uploaded by hand: on [JetBrains Marketplace](https://plugins.jetbrains.com),
+choose *Upload plugin* and upload the signed ZIP from `make sign`. Every new plugin is reviewed by JetBrains before it
+is listed. For later versions, increase `pluginVersion` in `gradle.properties`, update `<change-notes>` in
+`plugin.xml`, and run `make publish`.
+
+The underlying Gradle tasks (`signPlugin`, `verifyPluginSignature`, `publishPlugin`) read `CERTIFICATE_CHAIN_FILE`
+(or `CERTIFICATE_CHAIN` with the certificate's contents), `PRIVATE_KEY_FILE` (or `PRIVATE_KEY`),
+`PRIVATE_KEY_PASSWORD` and `PUBLISH_TOKEN` from the environment; without them, signing is skipped.
+
 ### Testing against real specifications
 
 Two opt-in tests parse, highlight and reformat every `.cddl` file below a directory, failing on syntax errors,
@@ -90,3 +134,7 @@ src/main/kotlin/.../cddl/
 src/main/resources/cddl/prelude.cddl   the standard prelude (RFC 8610, Appendix D)
 src/test/                    tests and test data
 ```
+
+## License
+
+[Apache License 2.0](LICENSE)
